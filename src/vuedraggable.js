@@ -14,19 +14,6 @@ function computeVmIndex(vnodes, element) {
   return vnodes.map(elt => elt.elm).indexOf(element);
 }
 
-function computeIndexes(slots, children, isTransition, footerOffset) {
-  if (!slots) {
-    return [];
-  }
-
-  const elmFromNodes = slots.map(elt => elt.elm);
-  const footerIndex = children.length - footerOffset;
-  const rawIndexes = [...children].map((elt, idx) =>
-    idx >= footerIndex ? elmFromNodes.length : elmFromNodes.indexOf(elt)
-  );
-  return isTransition ? rawIndexes.filter(ind => ind !== -1) : rawIndexes;
-}
-
 function emit(evtName, evtData) {
   this.$nextTick(() => this.$emit(evtName.toLowerCase(), evtData));
 }
@@ -120,6 +107,10 @@ const props = {
   noTransitionOnDrag: {
     type: Boolean,
     default: false
+  },
+  draggableSelector: {
+    type: String,
+    default: null
   },
   clone: {
     type: Function,
@@ -224,7 +215,6 @@ const draggableComponent = {
     });
     !("draggable" in options) && (options.draggable = ">*");
     this._sortable = new Sortable(this.rootContainer, options);
-    this.computeIndexes();
   },
 
   beforeDestroy() {
@@ -254,10 +244,6 @@ const draggableComponent = {
         this.updateOptions(newOptionValue);
       },
       deep: true
-    },
-
-    realList() {
-      this.computeIndexes();
     }
   },
 
@@ -285,20 +271,19 @@ const draggableComponent = {
         return this.$children[0].$slots.default;
       }
       const rawNodes = this.$slots.default;
-      return this.transitionMode ? rawNodes[0].child.$slots.default : rawNodes;
-    },
-
-    computeIndexes() {
-      this.$nextTick(() => {
-        this.visibleIndexes = computeIndexes(
-          this.getChildrenNodes(),
-          this.rootContainer.children,
-          this.transitionMode,
-          this.footerOffset
+      const nodes = this.transitionMode
+        ? rawNodes[0].child.$slots.default
+        : rawNodes;
+      if (this.draggableSelector) {
+        return nodes.filter(
+          x => x.elm.matches && x.elm.matches(this.draggableSelector)
         );
-      });
+      } else {
+        return nodes;
+      }
     },
 
+  
     getUnderlyingVm(htmlElt) {
       const index = computeVmIndex(this.getChildrenNodes() || [], htmlElt);
       if (index === -1) {
@@ -372,9 +357,9 @@ const draggableComponent = {
     },
 
     getVmIndex(domIndex) {
-      const indexes = this.visibleIndexes;
-      const numberIndexes = indexes.length;
-      return domIndex > numberIndexes - 1 ? numberIndexes : indexes[domIndex];
+      const el = this.rootContainer.children[domIndex];
+      const { index } = this.getUnderlyingVm(el);
+      return index;
     },
 
     getComponent() {
@@ -406,7 +391,6 @@ const draggableComponent = {
       removeNode(evt.item);
       const newIndex = this.getVmIndex(evt.newIndex);
       this.spliceList(newIndex, 0, element);
-      this.computeIndexes();
       const added = { element, newIndex };
       this.emitChanges({ added });
     },
@@ -472,7 +456,6 @@ const draggableComponent = {
     },
 
     onDragEnd() {
-      this.computeIndexes();
       draggingElement = null;
     }
   }

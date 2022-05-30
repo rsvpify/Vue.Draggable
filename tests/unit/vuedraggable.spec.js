@@ -241,20 +241,6 @@ describe("draggable.vue when initialized with list", () => {
     });
   });
 
-  it("computes indexes", async () => {
-    await Vue.nextTick();
-    expect(vm.visibleIndexes).toEqual([-1, 0, 1, 2, 3]);
-  });
-
-  it("update indexes", async () => {
-    await Vue.nextTick();
-    const computeIndexes = jest.fn();
-    wrapper.setMethods({ computeIndexes });
-    wrapper.setProps({ list: ["c", "d", "e", "f", "g"] });
-    await Vue.nextTick();
-    expect(computeIndexes).toHaveBeenCalled();
-  });
-
   it("set realList", () => {
     expect(vm.realList).toEqual(["a", "b", "c"]);
   });
@@ -900,22 +886,8 @@ describe("draggable.vue when initialized with value", () => {
     element = wrapper.element;
   });
 
-  it("computes indexes", async () => {
-    await Vue.nextTick();
-    expect(vm.visibleIndexes).toEqual([0, 1, 2]);
-  });
-
   it("renders correctly", () => {
     expectHTML(wrapper, initialRenderRaw);
-  });
-
-  it("update indexes", async () => {
-    await Vue.nextTick();
-    const computeIndexes = jest.fn();
-    wrapper.setMethods({ computeIndexes });
-    wrapper.setProps({ value: ["c", "d", "e", "f", "g"] });
-    await Vue.nextTick();
-    expect(computeIndexes).toHaveBeenCalled();
   });
 
   it("set realList", () => {
@@ -938,7 +910,7 @@ describe("draggable.vue when initialized with value", () => {
     it("sends a start event", async () => {
       await Vue.nextTick();
       expect(wrapper.emitted()).toEqual({
-        start: [[evt]],
+        start: [[evt]]
       });
     });
 
@@ -1064,11 +1036,6 @@ describe("draggable.vue when initialized with a transition group", () => {
     vm = wrapper.vm;
     props = vm.$options.props;
     element = wrapper.element;
-  });
-
-  it("computes indexes", async () => {
-    await Vue.nextTick();
-    expect(vm.visibleIndexes).toEqual([0, 1, 2]);
   });
 
   it("set realList", () => {
